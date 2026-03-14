@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asteroids Neon</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --cyan: #00f5ff;
+    --magenta: #ff00aa;
+    --yellow: #ffe600;
+    --dark: #03040a;
+    --mid: #0a0d1a;
+    --glow-cyan: 0 0 8px #00f5ff, 0 0 24px #00f5ff44;
+    --glow-mag: 0 0 8px #ff00aa, 0 0 24px #ff00aa44;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--dark);
+    color: #e0eeff;
+    font-family: 'Share Tech Mono', monospace;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* ── CANVAS BG ── */
+  #bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+  /* ── LAYOUT ── */
+  section { position: relative; z-index: 1; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 48px;
+    border-bottom: 1px solid #00f5ff18;
+    backdrop-filter: blur(12px);
+    background: #03040acc;
+  }
+  .nav-logo {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900; font-size: 1rem; letter-spacing: 0.3em;
+    color: var(--cyan); text-shadow: var(--glow-cyan);
+    text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 36px; list-style: none; }
+  .nav-links a {
+    color: #7aa0c0; font-size: 0.72rem; letter-spacing: 0.2em;
+    text-decoration: none; text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--cyan); text-shadow: var(--glow-cyan); }
+
+  /* ── HERO ── */
+  #hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 120px 24px 80px;
+  }
+  .hero-label {
+    font-size: 0.68rem; letter-spacing: 0.45em; color: var(--magenta);
+    text-shadow: var(--glow-mag); text-transform: uppercase;
+    margin-bottom: 24px;
+    animation: fadeUp 0.8s ease both;
+  }
+  h1 {
+    font-family: 'Orbitron', monospace; font-weight: 900;
+    font-size: clamp(3.2rem, 9vw, 7.5rem);
+    line-height: 1; letter-spacing: -0.01em;
+    animation: fadeUp 0.8s 0.15s ease both;
+  }
+  h1 span.line1 { display: block; color: #fff; }
+  h1 span.line2 {
+    display: block; color: var(--cyan);
+    text-shadow: var(--glow-cyan), 0 0 60px #00f5ff66;
+  }
+  .hero-sub {
+    margin-top: 32px; max-width: 480px;
+    font-size: 0.85rem; line-height: 1.8; color: #7aa0c0;
+    letter-spacing: 0.05em;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+  .hero-cta {
+    margin-top: 52px; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+    animation: fadeUp 0.8s 0.45s ease both;
+  }
+  .btn {
+    font-family: 'Orbitron', monospace; font-size: 0.72rem;
+    letter-spacing: 0.25em; text-transform: uppercase;
+    padding: 14px 36px; text-decoration: none;
+    border: 1px solid; transition: all 0.25s; cursor: pointer;
+  }
+  .btn-primary {
+    background: var(--cyan); color: var(--dark);
+    border-color: var(--cyan); font-weight: 700;
+    box-shadow: var(--glow-cyan);
+  }
+  .btn-primary:hover {
+    background: transparent; color: var(--cyan);
+    box-shadow: var(--glow-cyan), inset 0 0 20px #00f5ff22;
+  }
+  .btn-secondary {
+    background: transparent; color: #7aa0c0; border-color: #7aa0c040;
+  }
+  .btn-secondary:hover { border-color: var(--magenta); color: var(--magenta); box-shadow: var(--glow-mag); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    width: 100%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan)44, transparent);
+    margin: 0 auto;
+  }
+
+  /* ── FEATURES ── */
+  #features {
+    padding: 100px 48px;
+    max-width: 1100px; margin: 0 auto;
+  }
+  .section-label {
+    font-size: 0.65rem; letter-spacing: 0.5em; color: var(--cyan);
+    text-transform: uppercase; margin-bottom: 56px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: #00f5ff22; }
+
+  .features-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2px;
+  }
+  .feat {
+    padding: 40px 32px;
+    background: var(--mid); border: 1px solid #ffffff08;
+    transition: border-color 0.3s, background 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .feat::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--cyan); opacity: 0; transition: opacity 0.3s;
+  }
+  .feat:hover { border-color: #00f5ff22; background: #0d1424; }
+  .feat:hover::before { opacity: 1; }
+  .feat-icon { font-size: 1.6rem; margin-bottom: 20px; display: block; }
+  .feat-title {
+    font-family: 'Orbitron', monospace; font-size: 0.78rem;
+    letter-spacing: 0.15em; color: #fff; margin-bottom: 12px;
+  }
+  .feat-desc { font-size: 0.78rem; line-height: 1.7; color: #5a7a9a; }
+
+  /* ── PLATFORMS ── */
+  #platforms {
+    padding: 80px 48px;
+    background: var(--mid);
+    border-top: 1px solid #ffffff08; border-bottom: 1px solid #ffffff08;
+  }
+  .platforms-inner { max-width: 1100px; margin: 0 auto; }
+  .platforms-grid {
+    display: flex; gap: 16px; flex-wrap: wrap; margin-top: 40px;
+  }
+  .platform-pill {
+    padding: 10px 28px; border: 1px solid #ffffff18;
+    font-size: 0.72rem; letter-spacing: 0.2em; color: #6080a0;
+    text-transform: uppercase; transition: all 0.25s; text-decoration: none;
+  }
+  .platform-pill:hover {
+    border-color: var(--cyan); color: var(--cyan); box-shadow: var(--glow-cyan);
+  }
+
+  .ctrl-item {
+    padding: 28px 32px; background: var(--mid);
+    display: flex; align-items: center; gap: 20px;
+  }
+  .ctrl-key {
+    font-family: 'Orbitron', monospace; font-size: 0.65rem; letter-spacing: 0.1em;
+    color: var(--cyan); text-shadow: var(--glow-cyan);
+    border: 1px solid var(--cyan)44; padding: 6px 12px; white-space: nowrap;
+    min-width: 80px; text-align: center;
+  }
+  .ctrl-label { font-size: 0.72rem; color: #5a7a9a; letter-spacing: 0.1em; }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 48px; text-align: center;
+    border-top: 1px solid #ffffff08;
+    font-size: 0.68rem; color: #2a3a50; letter-spacing: 0.2em;
+  }
+  footer a { color: #3a5a80; text-decoration: none; }
+  footer a:hover { color: var(--cyan); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SCANLINES ── */
+  body::after {
+    content: ''; position: fixed; inset: 0; z-index: 200; pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px, #00000018 2px, #00000018 4px
+    );
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 640px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    #features, #platforms { padding: 60px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">ASTEROIDS NEON</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <p class="hero-label">Poe Games &nbsp;</p>
+  <h1>
+    <span class="line1">ASTEROIDS</span>
+    <span class="line2">NEON</span>
+  </h1>
+  <p class="hero-sub">
+Asteroids remaster with Neon Style.
+Hold out and battle through the incoming waves of Asteroids and UFO to earn a lot of points.
+Jump into Hyper Space to avoid any incoming collision.
+Warning : No safety spot guaranteed.
+  </p>
+  <div class="hero-cta">
+    <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=com.NoirRoad.AsteroidsNeon&hl=en" target="_blank">Play on Google</a>
+    <a class="btn btn-primary" href="" target="_blank">Play on IOS</a>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-label">Features</div>
+  <div class="features-grid">
+    <div class="feat">
+      <span class="feat-icon">🛸</span>
+      <div class="feat-title">UFO Menagerie</div>
+      <p class="feat-desc">Combat different hazards & Neon Nightmares</p>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">⚡</span>
+      <div class="feat-title">Power-ups</div>
+      <p class="feat-desc">Unlock devastation upon the neon-lit starscape.</p>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🎨</span>
+      <div class="feat-title">Color Customization</div>
+      <p class="feat-desc">Personalize every hue and pattern. Unlock ship models and environments to stand out in the cosmos.</p>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🏆</span>
+      <div class="feat-title">Online Rankings</div>
+      <p class="feat-desc">Challenge players worldwide. Unlock achievements that showcase your prowess in intergalactic danger.</p>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🎮</span>
+      <div class="feat-title">Full Gamepad Support</div>
+      <p class="feat-desc">Full gamepad support. Play how you want.</p>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">💥</span>
+      <div class="feat-title">Neon Explosions</div>
+      <p class="feat-desc">Outstanding music and immersive sound effects.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+// Animated starfield + asteroid particles
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+
+let W, H, stars = [], asteroids = [];
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+function randomStar() {
+  return {
+    x: Math.random() * W, y: Math.random() * H,
+    r: Math.random() * 1.2 + 0.2,
+    a: Math.random(), da: (Math.random() - 0.5) * 0.005,
+    speed: Math.random() * 0.15 + 0.02,
+  };
+}
+
+function randomAsteroid() {
+  const side = Math.floor(Math.random() * 4);
+  let x, y, vx, vy;
+  const speed = Math.random() * 0.4 + 0.1;
+  const angle = Math.random() * Math.PI * 2;
+  if (side === 0) { x = Math.random() * W; y = -30; }
+  else if (side === 1) { x = W + 30; y = Math.random() * H; }
+  else if (side === 2) { x = Math.random() * W; y = H + 30; }
+  else { x = -30; y = Math.random() * H; }
+  vx = (W / 2 - x) * 0.0005 + (Math.random() - 0.5) * 0.3;
+  vy = (H / 2 - y) * 0.0005 + (Math.random() - 0.5) * 0.3;
+  const sz = Math.random() * 22 + 8;
+  const sides = Math.floor(Math.random() * 4) + 5;
+  const offsets = Array.from({ length: sides }, () => 0.7 + Math.random() * 0.5);
+  const col = Math.random() > 0.5 ? '#00f5ff' : '#ff00aa';
+  return { x, y, vx, vy, sz, sides, offsets, angle, col, a: 0.06 + Math.random() * 0.1 };
+}
+
+function init() {
+  stars = Array.from({ length: 140 }, randomStar);
+  asteroids = Array.from({ length: 9 }, randomAsteroid);
+}
+
+function drawStar(s) {
+  ctx.beginPath();
+  ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(180,220,255,${s.a})`;
+  ctx.fill();
+}
+
+function drawAsteroid(a) {
+  ctx.save();
+  ctx.translate(a.x, a.y);
+  ctx.rotate(a.angle);
+  ctx.beginPath();
+  for (let i = 0; i < a.sides; i++) {
+    const t = (i / a.sides) * Math.PI * 2;
+    const r = a.sz * a.offsets[i];
+    const px = Math.cos(t) * r, py = Math.sin(t) * r;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.strokeStyle = a.col;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = a.a;
+  ctx.shadowColor = a.col;
+  ctx.shadowBlur = 10;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function loop() {
+  ctx.clearRect(0, 0, W, H);
+
+  // stars
+  for (const s of stars) {
+    s.a += s.da;
+    if (s.a < 0.05 || s.a > 0.9) s.da *= -1;
+    s.y += s.speed;
+    if (s.y > H + 2) { s.y = -2; s.x = Math.random() * W; }
+    drawStar(s);
+  }
+
+  // asteroids
+  for (let i = 0; i < asteroids.length; i++) {
+    const a = asteroids[i];
+    a.x += a.vx; a.y += a.vy; a.angle += 0.003;
+    if (a.x < -60 || a.x > W + 60 || a.y < -60 || a.y > H + 60) {
+      asteroids[i] = randomAsteroid();
+    }
+    drawAsteroid(a);
+  }
+
+  requestAnimationFrame(loop);
+}
+
+resize();
+init();
+loop();
+window.addEventListener('resize', () => { resize(); init(); });
+</script>
+</body>
+</html>
